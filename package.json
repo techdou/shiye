@@ -1,0 +1,30 @@
+{
+  "name": "shiye",
+  "version": "1.0.0",
+  "description": "拾页 · 网页资料库 PWA + Android",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/techdou/shiye.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/techdou/shiye/issues"
+  },
+  "homepage": "https://github.com/techdou/shiye#readme",
+  "private": "true",
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2"
+  }
+}
