@@ -2,7 +2,7 @@
 // 策略：app shell 预缓存（cache-first）；vendor 大件与字体运行时缓存（stale-while-revalidate）
 // 更新版本时递增 CACHE_VERSION 即可
 
-const CACHE_VERSION = 'shiye-v4';
+const CACHE_VERSION = 'shiye-v6';
 const SHELL = [
   './',
   './index.html',

@@ -640,6 +640,46 @@ textarea.prompt-input { min-height: 96px; resize: vertical; line-height: 1.6; }
 }
 .settings-about a { color: var(--muted); }
 
+/* ---------- 网页内嵌垫层（加载中 / 被拒引导，垫在透明 iframe 之下） ---------- */
+.embed-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: var(--bg);
+}
+.reader-frame.web {
+  z-index: 2;
+  background: transparent;
+}
+.embed-hint-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  color: var(--muted);
+  max-width: 300px;
+}
+.embed-hint-card p { margin: 0; font-size: 15.5px; font-weight: 600; color: var(--ink); }
+.embed-hint.loading p { color: var(--ink-2); font-weight: 500; }
+.embed-hint-card svg { color: var(--muted); opacity: .55; margin-bottom: 6px; }
+.embed-hint-card span { font-size: 13px; line-height: 1.6; }
+.embed-hint-card .btn { margin-top: 12px; padding: 12px 28px; flex: none; }
+.embed-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: embed-spin .8s linear infinite;
+  margin-bottom: 8px;
+}
+@keyframes embed-spin { to { transform: rotate(360deg); } }
+
 /* ---------- toast ---------- */
 .toast {
   position: fixed;

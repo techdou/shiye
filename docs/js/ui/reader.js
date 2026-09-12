@@ -126,7 +126,7 @@ function render() {
     setTitle(it.name);
     el.actions.appendChild(actionBtn('刷新', ICONS.refresh, () => render()));
     el.actions.appendChild(actionBtn('浏览器打开', ICONS.external, () => openExternal(it.url)));
-    appendFrame(it.url, 'web');
+    appendWebFrame(it.url);
   }
 }
 
@@ -146,6 +146,55 @@ function appendFrame(src, kind) {
   frame.src = src;
   frame.addEventListener('load', () => frame.classList.add('loaded'));
   el.stage.appendChild(frame);
+}
+
+// 网页收藏的内嵌加载：
+// 提示层垫在透明 iframe 之下——真实页面加载后不透明地盖住它；
+// 被 X-Frame-Options / CSP frame-ancestors 拒绝的帧永远透明（现代浏览器将其
+// 视为不透明源，JS 无法与正常跨域帧区分），加载结束仍露着垫层时切换为
+// "不允许内嵌"引导。真实页零打扰，被拒页有明确出口。
+function appendWebFrame(url) {
+  const hint = document.createElement('div');
+  hint.className = 'embed-hint loading';
+  hint.innerHTML =
+    '<div class="embed-hint-card"><span class="embed-spinner"></span><p>正在加载网页…</p></div>';
+  el.stage.appendChild(hint);
+
+  const frame = document.createElement('iframe');
+  frame.className = 'reader-frame web';
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads');
+  frame.referrerPolicy = 'no-referrer-when-downgrade';
+  frame.addEventListener('load', () => {
+    frame.classList.add('loaded');
+    // 旧内核：被拒帧是可访问的空白 about:blank 文档，可立即判定
+    try {
+      const doc = frame.contentDocument;
+      if (doc && doc.location.href === 'about:blank' && (!doc.body || doc.body.childElementCount === 0)) {
+        switchHintToBlocked(hint, url);
+        return;
+      }
+    } catch (e) { /* 正常跨域帧，走下面的延时切换 */ }
+    // 现代内核：被拒帧永久透明。真实页面此刻已用不透明背景盖住垫层，
+    // 切换动作对用户不可见；只有仍露着垫层的被拒帧会"变出"引导文案。
+    setTimeout(() => {
+      if (hint.parentNode) switchHintToBlocked(hint, url);
+    }, 900);
+  });
+  frame.src = url;
+  el.stage.appendChild(frame);
+}
+
+function switchHintToBlocked(hint, url) {
+  hint.classList.remove('loading');
+  hint.classList.add('blocked');
+  hint.innerHTML =
+    '<div class="embed-hint-card">' +
+    '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18" opacity=".4"/><path d="m9 15 6-6"/><path d="m15 15-6-6"/></svg>' +
+    '<p>该网站不允许内嵌展示</p>' +
+    '<span>这是对方站点的安全策略，可以改用浏览器打开</span>' +
+    '<button class="btn solid" type="button">用浏览器打开</button>' +
+    '</div>';
+  hint.querySelector('button').addEventListener('click', () => openExternal(url));
 }
 
 // 图片查看：深色中性底 + 居中适配，避免大图从左上角原尺寸溢出
