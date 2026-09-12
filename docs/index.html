@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>拾页 · 网页资料库</title>
+  <meta name="description" content="把散落的网页与讲义，拾进一本随身的册子。HTML/Markdown 渲染、文件夹整理、网页收藏。">
+  <meta name="theme-color" content="#f7f4ec">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="拾页">
+  <link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M9.5 13v4"/><path d="M13 13v4"/><path d="M16.5 15v2"/></svg>
+        <span class="brand-name">拾页</span>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" type="search" placeholder="搜索全部内容" autocomplete="off" enterkeyhint="search">
+      </div>
+      <button id="gear" class="icon-btn" title="设置" aria-label="设置">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </header>
+
+    <div class="crumbs" id="crumbs"></div>
+    <button id="btn-up" class="up-btn hidden" aria-label="返回上一级">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>上一级
+    </button>
+
+    <main class="lib-scroll">
+      <section id="recents-wrap" class="recents-wrap hidden">
+        <h2 class="sec-title">最近打开</h2>
+        <div id="recents" class="recents"></div>
+      </section>
+      <section id="list" class="list"></section>
+      <section id="empty" class="empty hidden"></section>
+    </main>
+
+    <button id="fab" aria-label="添加">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+
+  <!-- 阅读器 -->
+  <div id="reader" class="reader hidden">
+    <header id="reader-bar" class="reader-bar">
+      <button id="reader-back" class="icon-btn" aria-label="返回">
+        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div id="reader-title" class="reader-title"></div>
+      <div id="reader-actions" class="reader-actions"></div>
+    </header>
+    <div id="reader-stage" class="reader-stage"></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
