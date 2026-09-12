@@ -19,6 +19,7 @@ notes/
 
 # ---- 构建产物与依赖 ----
 node_modules/
+*.apk
 android/.gradle/
 android/build/
 android/app/build/

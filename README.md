@@ -45,7 +45,7 @@ python -m http.server 8765 --directory docs
 
 ## Android 构建
 
-前置：JDK 17、Android SDK（cmdline-tools + platform 35 + build-tools 35）、Node 18+
+前置：JDK 21（Capacitor 8 要求）、Android SDK（cmdline-tools + platform 35 + build-tools 35）、Node 18+
 
 ```bash
 npm install
