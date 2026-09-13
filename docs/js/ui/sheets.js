@@ -121,7 +121,7 @@ export function showAddSheet() {
     b.addEventListener('click', fn);
     return b;
   };
-  box.appendChild(mk(ICONS.import, '导入文件', 'HTML · Markdown · 图片', () => { hideSheet(); pickFiles(); }));
+  box.appendChild(mk(ICONS.import, '导入文件', 'HTML · Markdown · txt · 图片', () => { hideSheet(); pickFiles(); }));
   box.appendChild(mk(ICONS.folder, '新建文件夹', '分类整理你的内容', async () => {
     hideSheet();
     const name = await promptSheet({ title: '新建文件夹', placeholder: '文件夹名称' });
@@ -146,7 +146,8 @@ export function pickFiles() {
     fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.multiple = true;
-    fileInput.accept = '.html,.htm,.md,.markdown,.png,.jpg,.jpeg,.gif,.webp,.svg,.bmp';
+    // 不设 accept：带图片类型会被系统弹成"拍摄/相册"，进不了文件管理器；
+    // 类型过滤交给 store.importFiles 按扩展名做
     fileInput.style.display = 'none';
     document.body.appendChild(fileInput);
     fileInput.addEventListener('change', async () => {
@@ -156,7 +157,7 @@ export function pickFiles() {
         toast(`正在导入 ${done}/${total}…`);
       });
       if (r.imported) toast(`已导入 ${r.imported} 个文件` + (r.skipped.length ? `，跳过 ${r.skipped.length} 个不支持的` : ''));
-      else toast('没有可导入的文件（支持 html/md/图片）');
+      else toast('没有可导入的文件（支持 html/md/txt/图片）');
       fileInput.value = '';
     });
   }

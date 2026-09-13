@@ -298,6 +298,10 @@ input, textarea { font: inherit; color: inherit; }
   font-weight: 550;
   line-height: 1.35;
   height: 2.7em;
+  max-width: 100%;
+  /* 相机/截图这类无空格长文件名不允许默认不断行，会横向撑破卡片 */
+  overflow-wrap: anywhere;
+  word-break: break-all;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -399,6 +403,14 @@ input, textarea { font: inherit; color: inherit; }
 }
 .reader-frame.loaded { opacity: 1; }
 .reader-frame.md { background: var(--bg); }
+.reader-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #161410;
+}
 
 /* ---------- MD 编辑器 ---------- */
 .md-editor { display: flex; flex-direction: column; height: 100%; }

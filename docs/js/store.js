@@ -137,7 +137,7 @@ export async function createFolder(name) {
 
 const EXT_MAP = {
   'html': TYPES.HTML, 'htm': TYPES.HTML,
-  'md': TYPES.MD, 'markdown': TYPES.MD,
+  'md': TYPES.MD, 'markdown': TYPES.MD, 'txt': TYPES.MD,
   'png': TYPES.IMAGE, 'jpg': TYPES.IMAGE, 'jpeg': TYPES.IMAGE,
   'gif': TYPES.IMAGE, 'webp': TYPES.IMAGE, 'svg': TYPES.IMAGE, 'bmp': TYPES.IMAGE,
 };

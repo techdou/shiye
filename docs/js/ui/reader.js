@@ -197,17 +197,17 @@ function switchHintToBlocked(hint, url) {
   hint.querySelector('button').addEventListener('click', () => openExternal(url));
 }
 
-// 图片查看：深色中性底 + 居中适配，避免大图从左上角原尺寸溢出
+// 图片查看：主文档直接渲染 img（不套 iframe）。
+// 曾经用"blob 页面嵌 iframe"实现，部分手机内核（APK WebView / 定制 ROM）不支持
+// blob URL 作 frame src 导致白屏；图片是用户自选的静态内容，无需隔离。
 function renderImageFrame(it) {
   const url = URL.createObjectURL(it.content);
   mdBlobUrls.push(url);
-  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' +
-    'html,body{margin:0;height:100%;background:#161410;display:flex;align-items:center;justify-content:center}' +
-    'img{max-width:100%;max-height:100%;object-fit:contain}' +
-    '</style></head><body><img src="' + url + '" alt=""></body></html>';
-  const pageUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-  mdBlobUrls.push(pageUrl);
-  appendFrame(pageUrl, 'image');
+  const img = document.createElement('img');
+  img.className = 'reader-image';
+  img.alt = it.name;
+  img.src = url;
+  el.stage.appendChild(img);
 }
 
 // ---------- Markdown 渲染（iframe 隔离） ----------
