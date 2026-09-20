@@ -131,6 +131,9 @@ function render() {
 }
 
 function openExternal(url) {
+  // blob URL 被"浏览器打开"后,归收由新标签页接管——从回收列表移除,
+  // 避免关闭阅读器时 revoke 导致刚打开的标签页 404
+  mdBlobUrls = mdBlobUrls.filter(u => u !== url);
   const a = document.createElement('a');
   a.href = url;
   a.target = '_blank';
@@ -230,6 +233,7 @@ function renderMdFrame(it) {
     '<script src="vendor/highlight.min.js"><\/script>',
     '<script src="vendor/katex/katex.min.js"><\/script>',
     '<script src="vendor/katex/auto-render.min.js"><\/script>',
+    '<script src="js/render/kernel.js"><\/script>',
     '<script src="js/render/md-view.js"><\/script>',
     '<script>renderMD(decodeURIComponent("' + encodeURIComponent(text) + '"));<\/script>',
     '</body></html>',

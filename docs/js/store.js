@@ -36,6 +36,8 @@ export async function init() {
     await seed();
     await db.setSetting('seeded', true);
   }
+  // 内置内容(preset):从 content/content.json 清单装载,详见 loadPresetContent()
+  await loadPresetContent();
   emit();
 }
 
@@ -90,7 +92,11 @@ export function searchAll(q) {
   if (!kw) return [];
   const list = [];
   state.items.forEach(it => {
-    if (it.name.toLowerCase().includes(kw)) list.push(it);
+    const inName = it.name.toLowerCase().includes(kw);
+    // 全文搜索:MD 正文一起搜(内容本就全量在内存,零额外成本)
+    const inBody = it.type === TYPES.MD && typeof it.content === 'string'
+      && it.content.toLowerCase().includes(kw);
+    if (inName || inBody) list.push(it);
   });
   return list
     .sort((a, b) => (a.type === 'FOLDER' ? -1 : 1) - (b.type === 'FOLDER' ? -1 : 1) || a.name.localeCompare(b.name, 'zh-Hans-CN'))
@@ -147,7 +153,8 @@ export function extOf(name) {
   return i > 0 ? name.slice(i + 1).toLowerCase() : '';
 }
 
-export async function importFiles(fileList, onProgress) {
+export async function importFiles(fileList, onProgress, targetFolderId) {
+  const dest = targetFolderId ?? state.cwd;   // 缺省导入当前文件夹(文件夹批量导入时传子文件夹 id)
   const files = Array.from(fileList || []);
   const accepted = [], skipped = [];
   files.forEach(f => {
@@ -165,8 +172,8 @@ export async function importFiles(fileList, onProgress) {
       content = await file.text();
     }
     const item = {
-      id: uid(), type, name: uniqueName(state.cwd, file.name),
-      parentId: state.cwd, content, url: null, size: file.size,
+      id: uid(), type, name: uniqueName(dest, file.name),
+      parentId: dest, content, url: null, size: file.size,
       createdAt: now, updatedAt: now, lastOpenedAt: null,
     };
     await save(item);
@@ -422,3 +429,87 @@ const DEMO_HTML = `<!DOCTYPE html>
 <p>原式 = x·e^x − ∫ e^x dx = <strong>x·e^x − e^x + C</strong>。</p>
 </body>
 </html>`;
+
+
+// ---------- 内置内容(preset content) ----------
+// 以 shiye 为内核的讲义项目:把 md 放进 docs/content/,写一份 content/ content.json
+// 清单,首启自动装载进资料库(用户可删除,删除后不复活)。
+// 清单格式:{ "folder": "内置讲义", "items": [{ "name": "显示名.md", "file": "hello.md", "group": "可选分组" }] }
+// 无 content/content.json 时静默跳过(纯工具形态)。
+
+async function loadPresetContent() {
+  const FLAG = 'preset:v1';
+  const done = await db.getSetting(FLAG, false);
+  if (done) return;
+
+  let manifest = null;
+  try {
+    const r = await fetch('content/content.json');
+    if (r.ok) manifest = await r.json();
+  } catch (e) { /* file:// 或不存在:静默跳过 */ }
+
+  if (!manifest || !Array.isArray(manifest.items) || !manifest.items.length) {
+    await db.setSetting(FLAG, true);   // 没有预置内容也记标志,避免每次启动都发请求
+    return;
+  }
+
+  const now = Date.now();
+  const rootName = manifest.folder || '内置讲义';
+
+  // 复用同名根文件夹(重装/升级场景),没有则新建
+  let rootFolder = null;
+  state.items.forEach(it => {
+    if (!rootFolder && it.type === TYPES.FOLDER && (it.parentId ?? null) === null && it.name === rootName) rootFolder = it;
+  });
+  if (!rootFolder) {
+    rootFolder = {
+      id: uid(), type: TYPES.FOLDER, name: rootName, parentId: null,
+      content: null, url: null, size: 0, createdAt: now, updatedAt: now, lastOpenedAt: null,
+    };
+    state.items.set(rootFolder.id, rootFolder);
+    await db.putItem(rootFolder);
+  }
+
+  const groups = {};   // 分组名 -> folderId
+  const toPut = [];
+  let loaded = 0;
+
+  for (const spec of manifest.items) {
+    if (!spec || !spec.file) continue;
+    try {
+      const r = await fetch('content/' + spec.file);
+      if (!r.ok) { console.warn('[shiye] 预置内容 404:', spec.file); continue; }
+      const text = await r.text();
+
+      let parentId = rootFolder.id;
+      const g = (spec.group || '').trim();
+      if (g) {
+        if (!groups[g]) {
+          const gf = {
+            id: uid(), type: TYPES.FOLDER, name: uniqueName(rootFolder.id, g), parentId: rootFolder.id,
+            content: null, url: null, size: 0, createdAt: now, updatedAt: now, lastOpenedAt: null,
+          };
+          groups[g] = gf.id;
+          state.items.set(gf.id, gf);
+          toPut.push(gf);
+        }
+        parentId = groups[g];
+      }
+
+      const item = {
+        id: uid(), type: TYPES.MD, name: spec.name || spec.file, parentId,
+        content: text, url: null, size: text.length,
+        createdAt: now, updatedAt: now, lastOpenedAt: null,
+      };
+      state.items.set(item.id, item);
+      toPut.push(item);
+      loaded++;
+    } catch (e) {
+      console.warn('[shiye] 预置内容加载失败:', spec.file, e);
+    }
+  }
+
+  if (toPut.length) await db.putItems(toPut);
+  await db.setSetting(FLAG, true);
+  if (loaded) console.info(`[shiye] 已装载 ${loaded} 篇内置讲义`);
+}

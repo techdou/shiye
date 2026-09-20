@@ -2,11 +2,13 @@
 // 策略：app shell 预缓存（cache-first）；vendor 大件与字体运行时缓存（stale-while-revalidate）
 // 更新版本时递增 CACHE_VERSION 即可
 
-const CACHE_VERSION = 'shiye-v7';
+const CACHE_VERSION = 'shiye-v8';
 const SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './content/content.json',
+  './content/hello.md',
   './css/app.css',
   './js/main.js',
   './js/db.js',
@@ -28,6 +30,7 @@ const SHELL = [
   './icons/icon-512.png',
 ];
 const RUNTIME_PATTERNS = [
+  /\/content\//,   // 内置讲义内容(讲义项目可替换/追加)
   /\/vendor\/mermaid\.min\.js$/,
   /\/vendor\/katex\/fonts\//,
   /\/icons\//,

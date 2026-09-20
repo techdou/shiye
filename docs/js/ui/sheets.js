@@ -3,6 +3,7 @@
 
 import * as store from '../store.js';
 import * as reader from './reader.js';
+import { escapeHtml } from '../util.js';
 
 const ICONS = {
   import: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>',
@@ -122,6 +123,7 @@ export function showAddSheet() {
     return b;
   };
   box.appendChild(mk(ICONS.import, '导入文件', 'HTML · Markdown · txt · 图片', () => { hideSheet(); pickFiles(); }));
+  box.appendChild(mk(ICONS.folder, '导入文件夹', '整目录导入 · 保留子文件夹结构', () => { hideSheet(); pickFolders(); }));
   box.appendChild(mk(ICONS.folder, '新建文件夹', '分类整理你的内容', async () => {
     hideSheet();
     const name = await promptSheet({ title: '新建文件夹', placeholder: '文件夹名称' });
@@ -162,6 +164,49 @@ export function pickFiles() {
     });
   }
   fileInput.click();
+}
+
+// 文件夹批量导入:webkitdirectory 选择整目录,按 webkitRelativePath 的
+// 首层子目录在当前文件夹下建同名子文件夹,文件归位(支持多选目录)。
+let folderInput = null;
+export function pickFolders() {
+  if (!folderInput) {
+    folderInput = document.createElement('input');
+    folderInput.type = 'file';
+    folderInput.multiple = true;
+    folderInput.setAttribute('webkitdirectory', '');
+    folderInput.setAttribute('directory', '');
+    folderInput.style.display = 'none';
+    document.body.appendChild(folderInput);
+    folderInput.addEventListener('change', async () => {
+      const files = [...(folderInput.files || [])];
+      if (!files.length) return;
+      // 按相对路径首层目录分组(根文件直接入当前文件夹)
+      const groups = {};   // dirName -> File[]
+      const loose = [];
+      files.forEach(f => {
+        const rel = (f.webkitRelativePath || f.name).split('/');
+        if (rel.length <= 2) { loose.push(f); return; }   // [选中的目录名, 文件名]
+        const dir = rel[1];                                // 首层子目录
+        (groups[dir] = groups[dir] || []).push(f);
+      });
+      let total = 0, skipped = 0;
+      for (const [dir, fs] of Object.entries(groups)) {
+        try {
+          const folder = await store.createFolder(dir);
+          const r = await store.importFiles(fs, null, folder.id);
+          total += r.imported; skipped += r.skipped.length;
+        } catch (e) { toast(e.message); }
+      }
+      if (loose.length) {
+        const r = await store.importFiles(loose, null);
+        total += r.imported; skipped += r.skipped.length;
+      }
+      toast(total ? `已导入 ${total} 个文件` + (skipped ? `,跳过 ${skipped} 个不支持的` : '') : '没有可导入的文件(支持 html/md/txt/图片)');
+      folderInput.value = '';
+    });
+  }
+  folderInput.click();
 }
 
 // ---------- 条目操作菜单 ----------
@@ -260,11 +305,6 @@ export function showMovePicker(item) {
   showSheet(`移动「${item.name}」`, box);
 }
 
-function escapeHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
 
 // ---------- 长按手势（绑定在列表容器上） ----------
 

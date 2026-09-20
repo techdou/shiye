@@ -5,6 +5,7 @@ import * as store from '../store.js';
 import * as reader from './reader.js';
 import * as sheets from './sheets.js';
 import * as settings from './settings.js';
+import { escapeHtml } from '../util.js';
 
 const ICONS = {
   folder: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
@@ -210,11 +211,6 @@ function rowHtml(it) {
   </button>`;
 }
 
-function escapeHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s == null ? '' : String(s);
-  return d.innerHTML;
-}
 
 function fmtSize(n) {
   if (n < 1024) return n + ' B';

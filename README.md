@@ -17,7 +17,9 @@
 | 图片查看 | png / jpg / gif / webp / svg / bmp，居中适配 |
 | 文件夹管理 | 新建 / 重命名 / 移动 / 删除（级联）；同文件夹图片可被 MD 相对路径引用 |
 | 网页收藏 | 保存已上线的讲义地址随点随看；Android 安装后支持系统「分享 → 拾页」直接收藏。部分站点禁止内嵌时自动提示改用浏览器打开 |
-| 整理能力 | 全局搜索、最近打开、面包屑导航、右缘渐隐轮播 |
+| 整理能力 | 全局搜索(含 MD 正文全文检索)、最近打开、面包屑导航、右缘渐隐轮播 |
+| 文件夹批量导入 | 整目录选择,按首层子目录自动归组 |
+| 内置内容 | 讲义 md 放进 `content/` 即可随站点预装(访客首启自动装载,零手动导入)——**以拾页为内核发布讲义项目的推荐方式**,见下文 |
 | 主题 | 深浅色跟随系统，可手动覆盖 |
 | 数据安全 | 设置内可导出 / 恢复 JSON 备份 |
 
@@ -30,6 +32,46 @@ android/         Capacitor 原生壳工程 ────────► Android A
 
 - **Web**：`docs/` 即站点根，纯静态零构建，任何静态托管可跑
 - **App**：Capacitor 把 `docs/` 整体装入 Android WebView，资源内置、真离线
+
+## 以拾页为内核,新建一个讲义项目
+
+拾页可以当作**讲义项目的通用内核**:你的讲义 md 放进仓库 `content/` 目录,访客首次打开站点时自动装载进资料库的「内置讲义」文件夹——零手动导入、离线可读、可打包 APK。
+
+**五步起站:**
+
+```bash
+git clone https://github.com/techdou/shiye my-lecture && cd my-lecture
+rm -rf docs/content && mkdir docs/content        # ① 清空示例内容
+cp /path/to/your-lectures/*.md docs/content/      # ② 放入你的讲义 md(可带图片)
+# ③ 写清单 docs/content/content.json:
+#    { "folder": "你的课程名",
+#      "items": [ { "name": "第1讲 · 导论.md", "file": "lesson-01.md", "group": "" } ] }
+#    group 为可选的二级分组;同目录图片可被 md 相对路径引用
+# ④ 递增 docs/sw.js 的 CACHE_VERSION(如 shiye-v8 → shiye-v9)
+git add -A && git commit -m "我的讲义" && git push   # ⑤ push 后 Pages 自动部署
+```
+
+**渲染内核(独立 SDK):** `docs/js/render/kernel.js` 暴露 `ShiyeRender`,任何页面都能直接引用:
+
+```html
+<link rel="stylesheet" data-shiye-hljs href="vendor/highlight-github-dark.min.css">
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/highlight.min.js"></script>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="js/render/kernel.js"></script>
+<script>
+  ShiyeRender.init({ vendorBase: 'vendor/', theme: 'light', codeScheme: 'dark' });
+  ShiyeRender.render('# 你好\n\n正文', { container: document.body });
+</script>
+```
+
+- `codeScheme`: `'dark'`(恒深底浅字,GitHub Dark 配色,浅色页面上的经典对比)或 `'follow'`(随主题切换,编辑器场景)
+- `headingIds`: 自动为 h2/h3 生成锚点 id,可直接做目录深链
+- Mermaid 依赖懒加载(用到才下载),语法错误保留源码并给出可见提示
+- 站点内 `iframe` 阅读器(`md-view.js`)与外部页面共用同一内核
+
+**vendor 版本**(自托管,`docs/vendor/`):marked 12.0.2 · highlight.js 11.9.0 · KaTeX 0.16.9(含 woff2 字体) · Mermaid 10.9.1。升级时替换文件并回归测试渲染管线。
 
 ## 本地开发
 
@@ -68,12 +110,14 @@ cd android && ./gradlew assembleDebug
 │   │   ├── main.js        # 入口：装配 + 分享接收 + SW 注册
 │   │   ├── db.js          # IndexedDB 封装
 │   │   ├── store.js       # 状态与业务（条目树 CRUD / 导入 / 搜索 / 播种）
-│   │   ├── render/md-view.js  # MD 渲染内核（iframe 内运行，移植冷铱管线）
+│   │   ├── render/kernel.js   # ★ 渲染内核 SDK(管线独立,可被任何页面引用)
+│   │   ├── render/md-view.js  # iframe 适配层(装配 ShiyeRender,保持 renderMD 签名)
 │   │   └── ui/            # library / reader / sheets / settings
-│   ├── vendor/            # marked / KaTeX(含字体) / Mermaid 10 / highlight.js
+│   ├── content/           # ★ 内置讲义(content.json 清单 + md 文件,首启自动装载)
+│   ├── vendor/            # marked / KaTeX(含字体) / Mermaid 10 / highlight.js(自托管)
 │   └── icons/             # SVG 源 + GDI+ 生成脚本 + PNG
 ├── android/               # Capacitor 原生工程（gitignore 掉构建产物）
-├── capacitor.config.ts
+├── capacitor.config.json
 ├── package.json
 └── .gitignore
 ```
